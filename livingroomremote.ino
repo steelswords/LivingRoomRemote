@@ -15,53 +15,58 @@ ESP8266WebServer server(80);
 
 const int led = LED_BUILTIN;
 
-const String postForms = "<html>\
+const String rootWebsite = "<html>\
   <head>\
-    <title>ESP8266 Web Server POST handling</title>\
+    <title>Remote</title>\
     <style>\
       body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
     </style>\
   </head>\
   <body>\
-    <h1>POST plain text to /postplain/</h1><br>\
-    <form method=\"post\" enctype=\"text/plain\" action=\"/postplain/\">\
-      <input type=\"text\" name=\'{\"hello\": \"world\", \"trash\": \"\' value=\'\"}\'><br>\
-      <input type=\"submit\" value=\"Submit\">\
-    </form>\
-    <h1>POST form data to /postform/</h1><br>\
-    <form method=\"post\" enctype=\"application/x-www-form-urlencoded\" action=\"/postform/\">\
-      <input type=\"text\" name=\"hello\" value=\"world\"><br>\
-      <input type=\"submit\" value=\"Submit\">\
-    </form>\
+    <h1>Choose Device to Control</h1><br>\
+    <h2>TV</h2>\
+    <a href=\"/tv\">\
+    <img width=300px src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAoCAIAAAAt2Q6oAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kTtIw1AUhv8+pKIVBzuIOESoThZERXTTKhShQqgVWnUwuekLmjQkKS6OgmvBwcdi1cHFWVcHV0EQfIC4ujgpukiJ5yaFFjEeuNyP/57/595zAX+9zFQzOAaommWkEnEhk10VQq/woRtBDGFGYqY+J4pJeNbXPXVT3cV4lnffn9Wj5EwG+ATiWaYbFvEG8dSmpXPeJ46woqQQnxOPGnRB4keuyy6/cS447OeZESOdmieOEAuFNpbbmBUNlXiSOKqoGuX7My4rnLc4q+Uqa96TvzCc01aWuU5rEAksYgkiBMioooQyLMRo10gxkaLzuId/wPGL5JLJVQIjxwIqUCE5fvA/+D1bMz8x7iaF40DHi21/DAOhXaBRs+3vY9tunACBZ+BKa/krdWD6k/RaS4seAb3bwMV1S5P3gMsdoP9JlwzJkQK0/Pk88H5G35QF+m6BrjV3bs1znD4AaZpV8gY4OARGCpS97vHuzva5/dvTnN8PehJyqgs44eQAAAAJcEhZcwAALiMAAC4jAXilP3YAAAAHdElNRQfnAQsEJxt6Xfx+AAAAGXRFWHRDb21tZW50AENyZWF0ZWQgd2l0aCBHSU1QV4EOFwAAAGJJREFUWMPt07ENgEAIBVBwGCvj/nOYq1zmbI3GjgbzfkkBLwQiGiYjYt/WRuJjnEvHTUNDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDyz055yzumPmolI9w09B/Q9c84vv5vlIyruWmL8mxD0SLLweWAAAAAElFTkSuQmCC'/>\
+    </a>\
+    <h2>Bluray Player</h2>\
+    <p><b>Coming soon!</b></p>\
   </body>\
 </html>";
 
-const String tvHtml = "<html>\
-  <head>\
-    <title>Living Room Remote</title>\
-    <style>\
-      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-    </style>\
-  </head>\
-  <body>\
-    <h1>TV Remote</h1><br>\
-    <form method=\"post\" enctype=\"text/plain\" action=\"/tv/\">\
-      <input type=\"submit\" name=\"action\"  value=\"Source\">\
-      <input type=\"submit\" name=\"action\"   value=\"Volume Up\">\
-      <input type=\"submit\" name=\"action\" value=\"Volume Down\">\
-    </form>\
-    <h1>POST form data to /postform/</h1><br>\
-    <form method=\"post\" enctype=\"application/x-www-form-urlencoded\" action=\"/postform/\">\
-      <input type=\"text\" name=\"hello\" value=\"world\"><br>\
-      <input type=\"submit\" value=\"Submit\">\
-    </form>\
-  </body>\
+const String tvHtml = "<html>\n\
+  <head>\n\
+    <title>Living Room Remote</title>\n\
+    <style>\n\
+      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\n\
+      button { font-size: 32; background-color: burlywood; }\n\
+    </style>\n\
+  </head>\n\
+  <body>\n\
+  <script type='text/javascript'>\n\
+    function makeRequest(content) {\n\
+        console.log('Function running');\n\
+        const http = new XMLHttpRequest();\n\
+        http.onreadystatechange = function() { \n\
+            if (http.readyState == 4 && http.status == 200) {\n\
+            console.log(http.responseText);\n\
+            }\n\
+        }\n\
+        http.open('POST', 'tv', true);\n\
+        http.send(content);\n\
+        console.log('Posted' + content);\n\
+    }\n\
+    </script>\n\
+    <h1>TV Remote</h1><br>\n\
+    <hr/>\n\
+    <button type='button' action=\"#\" onclick=\"makeRequest('action=Source')\">Source</button>\n\
+    <button type='button' action=\"#\" onclick=\"makeRequest('action=Volume Up')\">Volume Up</button>\n\
+    <button type='button' action=\"#\" onclick=\"makeRequest('action=Volume Down')\">Volume Down</button>\n\
+    <button type='button' action=\"#\" onclick=\"makeRequest('action=Power')\">Power</button>\n\
+      </body>\n\
 </html>";
 
 void handleRoot() {
-  digitalWrite(led, 1);
-  server.send(200, "text/html", postForms);
-  digitalWrite(led, 0);
+  server.send(200, "text/html", rootWebsite);
 }
 
 void handlePlain() {
@@ -113,7 +118,11 @@ void handleTv()
         Serial.print("Got data from server: \"");
         Serial.print(passedData);
         Serial.println("\"");
-        if (passedData.equals(VOLUME_UP_ACTION_STRING))
+        if (passedData.equals(POWER_ACTION_STRING))
+        {
+            sendCommand(TV_POWER);
+        }
+        else if (passedData.equals(VOLUME_UP_ACTION_STRING))
         {
             sendCommand(TV_VOLUME_UP);
         }
